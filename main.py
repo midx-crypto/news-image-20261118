@@ -1,49 +1,28 @@
 #!/usr/bin/env python3
-"""Copy the vendored front page to the output directory, byte for byte.
+"""Round 2 entry for make.fun news-image-20261118.
 
-Usage:
-    MAKEFUN_OUTPUT_DIR=out python3 main.py
-    MAKEFUN_OUTPUT_DIR=out python3 main.py --verify   # check only, no write
+Copies the front-page image vendored in this repository to the output
+directory, byte for byte. Standard library only, no network, deterministic.
 """
-import hashlib
 import os
 import shutil
 import sys
-from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-SOURCE = HERE / "entry.png"
-
-
-def sha256(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+HERE = os.path.dirname(os.path.abspath(__file__))
+SRC = os.path.join(HERE, "entry.png")
 
 
-def main(argv):
-    verify = "--verify" in argv
-    out_dir = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "out"))
-    target = out_dir / "entry.png"
-    if not SOURCE.is_file():
-        print(f"missing vendored image: {SOURCE}", file=sys.stderr)
+def main():
+    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
+    os.makedirs(out_dir, exist_ok=True)
+    dest = os.path.join(out_dir, "entry.png")
+    if os.path.getsize(SRC) > 1024 * 1024:
+        print("vendored image exceeds the 1 MiB limit", file=sys.stderr)
         return 1
-    size = SOURCE.stat().st_size
-    if size > 1024 * 1024:
-        print(f"vendored image too large: {size} bytes (limit 1 MiB)",
-              file=sys.stderr)
-        return 1
-    if verify:
-        if not target.is_file():
-            print(f"no output to verify: {target}", file=sys.stderr)
-            return 1
-        ok = sha256(target) == sha256(SOURCE)
-        print(f"verify: {'OK' if ok else 'MISMATCH'} {target}")
-        return 0 if ok else 1
-    out_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(SOURCE, target)
-    print(f"wrote {target} ({target.stat().st_size} bytes, "
-          f"sha256 {sha256(target)})")
+    shutil.copyfile(SRC, dest)
+    print("wrote", dest, os.path.getsize(dest), "bytes")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv[1:]))
+    sys.exit(main())
