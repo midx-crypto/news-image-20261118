@@ -1,28 +1,29 @@
 #!/usr/bin/env python3
-"""Round 2 entry for make.fun news-image-20261118.
+"""news-image-20261118 round 3: entry point.
 
-Copies the front-page image vendored in this repository to the output
-directory, byte for byte. Standard library only, no network, deterministic.
+The entry is one pre-rendered newspaper front page, entry.png
+(JPEG bytes, 1024x1024), drawn by build.py in the sibling build
+directory from generated photos and a generated world map, with all
+text rendered on top. This program does nothing but copy that file
+into the output directory, byte for byte.
+
+It uses only the standard library, touches no network, and holds no
+state, so two runs always write the same bytes.
 """
 import os
 import shutil
-import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SRC = os.path.join(HERE, "entry.png")
+SOURCE = os.path.join(HERE, "entry.png")
 
 
 def main():
-    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
-    os.makedirs(out_dir, exist_ok=True)
-    dest = os.path.join(out_dir, "entry.png")
-    if os.path.getsize(SRC) > 1024 * 1024:
-        print("vendored image exceeds the 1 MiB limit", file=sys.stderr)
-        return 1
-    shutil.copyfile(SRC, dest)
-    print("wrote", dest, os.path.getsize(dest), "bytes")
-    return 0
+    target_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
+    os.makedirs(target_dir, exist_ok=True)
+    target = os.path.join(target_dir, "entry.png")
+    shutil.copyfile(SOURCE, target)
+    print("wrote %s" % target)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
